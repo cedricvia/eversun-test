@@ -1469,6 +1469,7 @@ function PasteImportModal({ clients, onImport, onClose }) {
   const [text, setText] = useState("");
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState("");
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     navigator.clipboard
@@ -1493,19 +1494,31 @@ function PasteImportModal({ clients, onImport, onClose }) {
     setPreview(rows);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!preview?.length) return;
-    const base = clients.length;
-    const newC = preview.map((r, i) => ({
-      ...r,
-      id: Date.now() + i,
-      dossier: `DOS-EV-${String(base + i + 1).padStart(4, "0")}`,
-    }));
-    onImport(newC);
-    toast(
-      `${newC.length} client${newC.length > 1 ? "s" : ""} importé${newC.length > 1 ? "s" : ""}`,
-    );
-    onClose();
+    setImporting(true);
+    try {
+      const base = clients.length;
+      const newC = preview.map((r, i) => ({
+        ...r,
+        dossier: `DOS-EV-${String(base + i + 1).padStart(4, "0")}`,
+      }));
+      
+      // Importer chaque client via l'API
+      for (const client of newC) {
+        await onImport(client);
+      }
+      
+      toast(
+        `${newC.length} client${newC.length > 1 ? "s" : ""} importé${newC.length > 1 ? "s" : ""}`,
+      );
+      onClose();
+    } catch (err) {
+      setError("Erreur lors de l'importation. Veuillez réessayer.");
+      console.error("Import error:", err);
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
@@ -1783,8 +1796,8 @@ function PasteImportModal({ clients, onImport, onClose }) {
             <Btn v="ghost" onClick={onClose}>
               Annuler
             </Btn>
-            <Btn ico="upload" onClick={handleImport}>
-              Importer {preview.length} client{preview.length > 1 ? "s" : ""}
+            <Btn ico="upload" onClick={handleImport} disabled={importing}>
+              {importing ? 'Importation...' : `Importer ${preview.length} client${preview.length > 1 ? "s" : ""}`}
             </Btn>
           </div>
         </>
@@ -2464,7 +2477,7 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
       {pasteModal && (
         <PasteImportModal
           clients={clients}
-          onImport={(nc) => setClients((cs) => [...cs, ...nc])}
+          onImport={clientActions.addClient}
           onClose={() => setPasteModal(false)}
         />
       )}
