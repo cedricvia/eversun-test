@@ -78,6 +78,7 @@ module.exports = async (req, res) => {
   console.log('Headers:', req.headers);
   console.log('Body keys:', req.body ? Object.keys(req.body) : 'none');
   console.log('MONGO_URI présente:', !!process.env.MONGO_URI);
+  console.log('MONGO_URI utilisée:', MONGO_URI ? MONGO_URI.substring(0, 50) + '...' : 'NON DÉFINIE');
   console.log('==========================');
   
   // CORS
@@ -143,6 +144,8 @@ module.exports = async (req, res) => {
 
   try {
     console.log('🔗 Tentative de connexion MongoDB...');
+    console.log('📍 MONGO_URI complète:', MONGO_URI);
+    
     await connectDB();
     console.log('✅ Connexion DB réussie');
     
