@@ -428,6 +428,10 @@ const Ico = memo(({ n, size = 16, sw = 1.5 }) => {
 });
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
+function getClientId(client) {
+  return client._id || client.id;
+}
+
 function useLS(key, init) {
   const [v, set] = useState(() => {
     try {
@@ -1792,7 +1796,7 @@ function PasteImportModal({ clients, onImport, onClose }) {
 // ─── Bulk edit modal ──────────────────────────────────────────────────────────
 function BulkEditModal({ ids, clients, onSave, onClose }) {
   const selected = useMemo(
-    () => clients.filter((c) => ids.includes(c.id)),
+    () => clients.filter((c) => ids.includes(getClientId(c))),
     [ids, clients],
   );
   const [stage, setStage] = useState("");
@@ -1819,7 +1823,7 @@ function BulkEditModal({ ids, clients, onSave, onClose }) {
       >
         {selected.map((c) => (
           <span
-            key={c.id}
+            key={getClientId(c)}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -1930,15 +1934,15 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
   }, [clients, debouncedQ, sortBy]);
 
   const allSel = useMemo(
-    () => filtered.length > 0 && filtered.every((c) => selected.has(c.id)),
+    () => filtered.length > 0 && filtered.every((c) => selected.has(getClientId(c))),
     [filtered, selected],
   );
   const someSel = useMemo(
-    () => filtered.some((c) => selected.has(c.id)) && !allSel,
+    () => filtered.some((c) => selected.has(getClientId(c))) && !allSel,
     [filtered, selected, allSel],
   );
   const selIds = useMemo(
-    () => [...selected].filter((id) => clients.find((c) => c.id === id)),
+    () => [...selected].filter((id) => clients.find((c) => getClientId(c) === id)),
     [selected, clients],
   );
 
@@ -1955,7 +1959,7 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
     (v) =>
       setSelected((s) => {
         const n = new Set(s);
-        filtered.forEach((c) => (v ? n.add(c.id) : n.delete(c.id)));
+        filtered.forEach((c) => (v ? n.add(getClientId(c)) : n.delete(getClientId(c))));
         return n;
       }),
     [filtered],
@@ -2252,10 +2256,10 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
           {/* Rows */}
           {filtered.map((c, i) => {
             const ini = ((c.nom[0] || "") + (c.prenom[0] || "")).toUpperCase();
-            const isSel = selected.has(c.id);
+            const isSel = selected.has(getClientId(c));
             return (
               <div
-                key={c.id}
+                key={getClientId(c)}
                 onClick={() => onView(c)}
                 style={{
                   display: "flex",
@@ -2282,7 +2286,7 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
                 <div onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={isSel}
-                    onChange={(v) => toggleOne(c.id, v)}
+                    onChange={(v) => toggleOne(getClientId(c), v)}
                   />
                 </div>
                 <div
@@ -3404,7 +3408,7 @@ function InstallSection({ data, setData, clients, onViewClient }) {
             >
               <option value="">— Sélectionner —</option>
               {clients.map((c) => (
-                <option key={c.id} value={c.id}>
+                <option key={getClientId(c)} value={getClientId(c)}>
                   {c.dossier} — {c.nom} {c.prenom}
                 </option>
               ))}
