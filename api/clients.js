@@ -14,7 +14,7 @@ const ClientSchema = new mongoose.Schema({
 const Client = mongoose.models.Client || mongoose.model('Client', ClientSchema);
 
 // Connexion MongoDB
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:admin123@cluster0.mongodb.net/everysun?retryWrites=true&w=majority';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://cedricvia_db_user:6PPJlDwubBwwmQzf@cluster0.qltofum.mongodb.net/?appName=Cluster0';
 
 if (!MONGO_URI) {
   console.error('ERREUR: MONGO_URI n\'est pas défini dans les variables d\'environnement');
