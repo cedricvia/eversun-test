@@ -59,6 +59,9 @@ module.exports = async (req, res) => {
         return res.status(201).json(client);
         
       case 'PUT':
+        if (!id) {
+          return res.status(400).json({ error: 'ID requis pour la modification' });
+        }
         const updatedClient = await Client.findByIdAndUpdate(id, body, { new: true });
         if (!updatedClient) {
           return res.status(404).json({ error: 'Client non trouvé' });
@@ -66,6 +69,9 @@ module.exports = async (req, res) => {
         return res.status(200).json(updatedClient);
         
       case 'DELETE':
+        if (!id) {
+          return res.status(400).json({ error: 'ID requis pour la suppression' });
+        }
         const deletedClient = await Client.findByIdAndDelete(id);
         if (!deletedClient) {
           return res.status(404).json({ error: 'Client non trouvé' });

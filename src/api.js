@@ -39,11 +39,11 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(client),
   }),
-  updateClient: (id, client) => apiRequest(`/clients/${id}`, {
+  updateClient: (id, client) => apiRequest(`/clients?id=${id}`, {
     method: 'PUT',
     body: JSON.stringify(client),
   }),
-  deleteClient: (id) => apiRequest(`/clients/${id}`, {
+  deleteClient: (id) => apiRequest(`/clients?id=${id}`, {
     method: 'DELETE',
   }),
 };

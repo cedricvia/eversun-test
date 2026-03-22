@@ -153,6 +153,7 @@ import {
   createContext,
   useContext,
 } from "react";
+import { useApiData } from "./useApiData";
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -3683,14 +3684,7 @@ function EversunApp() {
   const addClient = async (client) => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(client),
-      });
-      if (!res.ok) throw new Error("Erreur lors de l'ajout du client");
-      const saved = await res.json();
-      setClients((cs) => [...cs, saved]);
+      const saved = await clientActions.addClient(client);
       toast(`Dossier ${saved.dossier} créé`, "success");
     } catch (e) {
       toast("Erreur lors de l'ajout du client", "error");
@@ -3698,7 +3692,7 @@ function EversunApp() {
       setIsLoading(false);
     }
   };
-  const [clients, setClients] = useState([]);
+  const [clients, setClients, clientsLoading, clientsError, clientActions] = useApiData('evs_clients', []);
   const [page, setPage] = useState("clients");
   const [mini, setMini] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
