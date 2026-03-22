@@ -28,19 +28,41 @@ async function connectDB() {
   
   if (!cached.promise) {
     if (!MONGO_URI) {
-      throw new Error('MONGO_URI n\'est pas configuré');
+      const errorMsg = 'MONGO_URI n\'est pas configuré';
+      console.error('❌', errorMsg);
+      console.error('Variables d\'environnement disponibles:', Object.keys(process.env));
+      throw new Error(errorMsg);
     }
     
-    console.log('Connexion à MongoDB...');
+    console.log('🔗 Tentative de connexion MongoDB...');
+    console.log('📍 MONGO_URI:', MONGO_URI ? MONGO_URI.substring(0, 20) + '...' : 'NON DÉFINI');
+    
     cached.promise = mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout après 5 secondes
+      bufferCommands: false,
+      bufferMaxEntries: 0
     }).then(mongoose => {
-      console.log('Connecté à MongoDB avec succès');
+      console.log('✅ Connecté à MongoDB avec succès');
+      console.log('📊 Database:', mongoose.connection.name);
       return mongoose;
     }).catch(error => {
-      console.error('Erreur de connexion MongoDB:', error);
-      throw error;
+      console.error('💥 Erreur détaillée de connexion MongoDB:');
+      console.error('   Code erreur:', error.code || 'UNKNOWN');
+      console.error('   Message:', error.message);
+      console.error('   Stack complète:', error.stack);
+      
+      // Messages d'erreur spécifiques pour debugging
+      if (error.code === 'ENOTFOUND') {
+        console.error('🔍 Solution: Vérifiez l\'hôte et la base de données MongoDB');
+      } else if (error.code === 'ECONNREFUSED') {
+        console.error('🔍 Solution: Vérifiez le firewall MongoDB et les identifiants');
+      } else if (error.code === 'ECONNRESET') {
+        console.error('🔍 Solution: Réseau instable, réessayez');
+      }
+      
+      throw new Error(`Erreur de connexion MongoDB: ${error.message}`);
     });
   }
   
