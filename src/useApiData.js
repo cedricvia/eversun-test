@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 
+// Fonction de notification simple si toast n'est pas disponible
+const notify = (message, type = 'info') => {
+  console.log(`[${type.toUpperCase()}] ${message}`);
+  // Vous pouvez remplacer cela par un vrai système de toast plus tard
+};
+
 export function useApiData(key, init = []) {
   const [data, setData] = useState(init);
   const [loading, setLoading] = useState(true);
@@ -78,9 +84,11 @@ export function useApiData(key, init = []) {
         
         const newClient = await response.json();
         setData(prev => [...prev, newClient]);
+        notify(`Client ${newClient.dossier} créé`, 'success');
         return newClient;
       } catch (err) {
         setError(err.message);
+        notify("Erreur lors de l'ajout du client", 'error');
         throw err;
       }
     },
@@ -103,9 +111,11 @@ export function useApiData(key, init = []) {
         setData(prev => prev.map(client => 
           client._id === id ? updatedClient : client
         ));
+        notify(`Client mis à jour`, 'success');
         return updatedClient;
       } catch (err) {
         setError(err.message);
+        notify("Erreur lors de la mise à jour du client", 'error');
         throw err;
       }
     },
@@ -123,8 +133,10 @@ export function useApiData(key, init = []) {
         }
         
         setData(prev => prev.filter(client => client._id !== id));
+        notify("Client supprimé", 'success');
       } catch (err) {
         setError(err.message);
+        notify("Erreur lors de la suppression du client", 'error');
         throw err;
       }
     },
