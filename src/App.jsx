@@ -1999,17 +1999,8 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
         await addClient(form);
       } else {
         try {
-          const id = modal._id || modal.id;
-          const res = await fetch(`/api/clients/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-          });
-          if (!res.ok) throw new Error();
-          const updated = await res.json();
-          setClients((cs) =>
-            cs.map((c) => (c.id === id || c._id === id ? updated : c)),
-          );
+          const id = getClientId(modal);
+          await clientActions.updateClient(id, form);
           toast(`${form.nom} ${form.prenom} mis à jour`);
         } catch {
           toast("Erreur lors de la modification", "error");
@@ -2017,13 +2008,13 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
       }
       setModal(null);
     },
-    [modal, addClient, setClients],
+    [modal, addClient, clientActions],
   );
 
   const applyBulk = useCallback(
     (ids, patch) => {
       setClients((cs) =>
-        cs.map((c) => (ids.includes(c.id) ? { ...c, ...patch } : c)),
+        cs.map((c) => (ids.includes(getClientId(c)) ? { ...c, ...patch } : c)),
       );
       toast(`${ids.length} client${ids.length > 1 ? "s" : ""} mis à jour`);
       clearSel();
@@ -2436,12 +2427,7 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
           }
           onConfirm={async () => {
             try {
-              await fetch(`/api/clients/${del._id || del.id}`, {
-                method: "DELETE",
-              });
-              setClients((cs) =>
-                cs.filter((c) => c.id !== del.id && c._id !== del._id),
-              );
+              await clientActions.deleteClient(getClientId(del));
               toast(`${del.nom} ${del.prenom} supprimé`, "error");
             } catch {
               toast("Erreur lors de la suppression", "error");
@@ -2470,15 +2456,9 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
           onConfirm={async () => {
             try {
               await Promise.all(
-                selIds.map((id) =>
-                  fetch(`/api/clients/${id}`, { method: "DELETE" }),
-                ),
+                selIds.map((c) => clientActions.deleteClient(getClientId(c)))
               );
-              setClients((cs) =>
-                cs.filter(
-                  (c) => !selIds.includes(c.id) && !selIds.includes(c._id),
-                ),
-              );
+              toast(`${selIds.length} dossier${selIds.length > 1 ? "s" : ""} supprimé${selIds.length > 1 ? "s" : ""}`, "error");
               clearSel();
             } catch {
               toast("Erreur lors de la suppression multiple", "error");
@@ -3768,12 +3748,17 @@ function EversunApp() {
 
   // Gestion du détail client (fiche)
   const handleClientSave = useCallback(
-    (updated) => {
-      setClients((cs) =>
-        cs.map((c) => (c.id === updated.id ? { ...updated } : c)),
-      );
+    async (updated) => {
+      try {
+        const clientId = getClientId(updated);
+        await clientActions.updateClient(clientId, updated);
+        toast(`Client ${updated.nom} ${updated.prenom} mis à jour`, "success");
+      } catch (err) {
+        toast("Erreur lors de la mise à jour du client", "error");
+        console.error("Update error:", err);
+      }
     },
-    [setClients],
+    [clientActions],
   );
   const handleClientClose = useCallback(() => setViewC(null), []);
 
@@ -3783,7 +3768,6 @@ function EversunApp() {
       clients: (
         <ClientsSection
           clients={clients}
-          setClients={setClients}
           addClient={addClient}
           onView={setViewC}
         />
