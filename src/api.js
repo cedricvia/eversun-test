@@ -32,7 +32,7 @@ async function apiRequest(endpoint, options = {}) {
   }
 }
 
-export const api = {
+export default {
   // Clients
   getClients: () => apiRequest('/clients'),
   createClient: (client) => apiRequest('/clients', {

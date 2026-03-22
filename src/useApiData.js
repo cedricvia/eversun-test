@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from './api';
+import api from './api';
 
 export function useApiData(key, init = []) {
   const [data, setData] = useState(init);
