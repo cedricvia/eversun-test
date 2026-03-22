@@ -91,56 +91,8 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Vérifier si MongoDB est accessible (avec fallback sur la connexion par défaut)
-  if (!MONGO_URI && !process.env.MONGO_URI) {
-    console.error('❌ Aucune connexion MongoDB disponible - utilisation du mode démo');
-    
-    // Mode démo avec données factices
-    const demoClients = [
-      {
-        _id: 'demo1',
-        nom: 'Demo',
-        prenom: 'Client',
-        email: 'demo@eversun.fr',
-        tel: '0123456789',
-        adresse: '123 Rue de la Démo',
-        stage: 'Attente document',
-        dossier: 'DOS-EV-0001'
-      }
-    ];
-    
-    const { method, query, body } = req;
-    const id = query.id;
-    
-    switch (method) {
-      case 'GET':
-        console.log('📋 GET clients - mode démo');
-        return res.status(200).json(demoClients);
-        
-      case 'POST':
-        console.log('➕ POST client - mode démo, non autorisé');
-        return res.status(503).json({ 
-          error: 'Mode démo: création non autorisée sans MongoDB' 
-        });
-        
-      case 'PUT':
-        console.log('✏️ PUT client - mode démo, non autorisé');
-        return res.status(503).json({ 
-          error: 'Mode démo: modification non autorisée sans MongoDB' 
-        });
-        
-      case 'DELETE':
-        console.log('🗑️ DELETE client - mode démo, non autorisé');
-        return res.status(503).json({ 
-          error: 'Mode démo: suppression non autorisée sans MongoDB' 
-        });
-        
-      default:
-        console.log('❌ Method not allowed:', method);
-        res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-        return res.status(405).json({ error: `Méthode ${method} non autorisée` });
-    }
-  }
+  // Tenter la connexion MongoDB (avec fallback sur la connexion par défaut)
+  // On essaie toujours de se connecter, même sans MONGO_URI configuré
 
   try {
     console.log('🔗 Tentative de connexion MongoDB...');
@@ -220,8 +172,8 @@ module.exports = async (req, res) => {
     console.error('Stack:', error.stack);
     console.error('Type:', error.name);
     
-    // Si erreur de connexion MongoDB, retenter en mode démo
-    if (error.message && error.message.includes('MONGO_URI')) {
+    // Si erreur de connexion MongoDB, basculer en mode démo
+    if (error.message && (error.message.includes('MONGO_URI') || error.message.includes('MongoDB') || error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED')) {
       console.log('🔄 Basculement en mode démo suite à erreur MongoDB');
       const demoClients = [
         {
