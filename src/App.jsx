@@ -1497,6 +1497,8 @@ function PasteImportModal({ clients, onImport, onClose }) {
   const handleImport = async () => {
     if (!preview?.length) return;
     setImporting(true);
+    setError("");
+    
     try {
       const base = clients.length;
       const newC = preview.map((r, i) => ({
@@ -1504,18 +1506,29 @@ function PasteImportModal({ clients, onImport, onClose }) {
         dossier: `DOS-EV-${String(base + i + 1).padStart(4, "0")}`,
       }));
       
+      console.log("Importing clients:", newC);
+      
       // Importer chaque client via l'API
-      for (const client of newC) {
-        await onImport(client);
+      let successCount = 0;
+      for (let i = 0; i < newC.length; i++) {
+        try {
+          const client = newC[i];
+          console.log(`Importing client ${i + 1}/${newC.length}:`, client);
+          await onImport(client);
+          successCount++;
+        } catch (clientErr) {
+          console.error(`Error importing client ${i + 1}:`, clientErr);
+          throw new Error(`Erreur lors de l'importation du client ${i + 1}: ${clientErr.message}`);
+        }
       }
       
       toast(
-        `${newC.length} client${newC.length > 1 ? "s" : ""} importé${newC.length > 1 ? "s" : ""}`,
+        `${successCount} client${successCount > 1 ? "s" : ""} importé${successCount > 1 ? "s" : ""} avec succès`,
       );
       onClose();
     } catch (err) {
-      setError("Erreur lors de l'importation. Veuillez réessayer.");
       console.error("Import error:", err);
+      setError(err.message || "Erreur lors de l'importation. Veuillez réessayer.");
     } finally {
       setImporting(false);
     }
@@ -2477,7 +2490,7 @@ function ClientsSection({ clients, setClients, addClient, onView }) {
       {pasteModal && (
         <PasteImportModal
           clients={clients}
-          onImport={clientActions.addClient}
+          onImport={addClient}
           onClose={() => setPasteModal(false)}
         />
       )}
