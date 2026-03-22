@@ -194,6 +194,39 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('💥 ERREUR API:', error);
     console.error('Stack:', error.stack);
+    
+    // Si erreur de connexion MongoDB, retenter en mode démo
+    if (error.message && error.message.includes('MONGO_URI')) {
+      console.log('🔄 Basculement en mode démo suite à erreur MongoDB');
+      const demoClients = [
+        {
+          _id: 'demo1',
+          nom: 'Demo',
+          prenom: 'Client',
+          email: 'demo@eversun.fr',
+          tel: '0123456789',
+          adresse: '123 Rue de la Démo',
+          stage: 'Attente document',
+          dossier: 'DOS-EV-0001'
+        }
+      ];
+      
+      const { method } = req;
+      
+      switch (method) {
+        case 'GET':
+          return res.status(200).json(demoClients);
+        case 'POST':
+        case 'PUT':
+        case 'DELETE':
+          return res.status(503).json({ 
+            error: `Mode démo: ${method.toLowerCase()} non autorisée sans connexion MongoDB` 
+          });
+        default:
+          return res.status(405).json({ error: `Méthode ${method} non autorisée` });
+      }
+    }
+    
     return res.status(500).json({ 
       error: error.message,
       stack: error.stack 
