@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from './api';
 
 export function useApiData(key, init = []) {
   const [data, setData] = useState(init);
@@ -13,7 +12,15 @@ export function useApiData(key, init = []) {
       setError(null);
       
       if (key === 'evs_clients') {
-        const clients = await api.getClients();
+        // Appel API direct pour éviter les problèmes d'import
+        const API_BASE = import.meta.env.VITE_API_URL || '/api';
+        const response = await fetch(`${API_BASE}/clients`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const clients = await response.json();
         setData(clients);
       } else {
         // Pour les autres clés, utiliser localStorage en fallback
@@ -58,7 +65,18 @@ export function useApiData(key, init = []) {
     addClient: async (clientData) => {
       if (key !== 'evs_clients') return;
       try {
-        const newClient = await api.createClient(clientData);
+        const API_BASE = import.meta.env.VITE_API_URL || '/api';
+        const response = await fetch(`${API_BASE}/clients`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(clientData),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const newClient = await response.json();
         setData(prev => [...prev, newClient]);
         return newClient;
       } catch (err) {
@@ -70,7 +88,18 @@ export function useApiData(key, init = []) {
     updateClient: async (id, clientData) => {
       if (key !== 'evs_clients') return;
       try {
-        const updatedClient = await api.updateClient(id, clientData);
+        const API_BASE = import.meta.env.VITE_API_URL || '/api';
+        const response = await fetch(`${API_BASE}/clients?id=${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(clientData),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const updatedClient = await response.json();
         setData(prev => prev.map(client => 
           client._id === id ? updatedClient : client
         ));
@@ -84,7 +113,15 @@ export function useApiData(key, init = []) {
     deleteClient: async (id) => {
       if (key !== 'evs_clients') return;
       try {
-        await api.deleteClient(id);
+        const API_BASE = import.meta.env.VITE_API_URL || '/api';
+        const response = await fetch(`${API_BASE}/clients?id=${id}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
         setData(prev => prev.filter(client => client._id !== id));
       } catch (err) {
         setError(err.message);
