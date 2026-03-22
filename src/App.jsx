@@ -1922,7 +1922,7 @@ function BulkEditModal({ ids, clients, onSave, onClose }) {
 }
 
 // ─── Clients section ──────────────────────────────────────────────────────────
-function ClientsSection({ clients, setClients, addClient, onView }) {
+function ClientsSection({ clients, setClients, addClient, onView, clientActions }) {
   const [q, setQ] = useState("");
   const [modal, setModal] = useState(null);
   const [del, setDel] = useState(null);
@@ -3772,6 +3772,7 @@ function EversunApp() {
           clients={clients}
           addClient={addClient}
           onView={setViewC}
+          clientActions={clientActions}
         />
       ),
       declaration: (
