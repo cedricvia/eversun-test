@@ -3673,6 +3673,9 @@ function DarkModeToggle() {
 }
 
 function EversunApp() {
+  // Hook useApiData pour les clients - DÉCLARÉ EN PREMIER
+  const [clients, setClients, clientsLoading, clientsError, clientActions] = useApiData('evs_clients', []);
+
   // Charger les clients depuis l'API au montage
   useEffect(() => {
     setIsLoading(true);
@@ -3702,7 +3705,6 @@ function EversunApp() {
       setIsLoading(false);
     }
   };
-  const [clients, setClients, clientsLoading, clientsError, clientActions] = useApiData('evs_clients', []);
   const [page, setPage] = useState("clients");
   const [mini, setMini] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
