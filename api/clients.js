@@ -91,9 +91,9 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Vérifier si MongoDB est configuré
-  if (!process.env.MONGO_URI) {
-    console.error('❌ MONGO_URI non configuré - utilisation du mode démo');
+  // Vérifier si MongoDB est accessible (avec fallback sur la connexion par défaut)
+  if (!MONGO_URI && !process.env.MONGO_URI) {
+    console.error('❌ Aucune connexion MongoDB disponible - utilisation du mode démo');
     
     // Mode démo avec données factices
     const demoClients = [
