@@ -72,7 +72,13 @@ async function connectDB() {
 
 // Handler principal
 module.exports = async (req, res) => {
-  console.log('📡 API Clients appelée - Method:', req.method, 'Query:', req.query);
+  console.log('📡 === API Clients appelée ===');
+  console.log('Method:', req.method);
+  console.log('Query:', req.query);
+  console.log('Headers:', req.headers);
+  console.log('Body keys:', req.body ? Object.keys(req.body) : 'none');
+  console.log('MONGO_URI présente:', !!process.env.MONGO_URI);
+  console.log('==========================');
   
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -136,6 +142,7 @@ module.exports = async (req, res) => {
   }
 
   try {
+    console.log('🔗 Tentative de connexion MongoDB...');
     await connectDB();
     console.log('✅ Connexion DB réussie');
     
@@ -153,10 +160,22 @@ module.exports = async (req, res) => {
         
       case 'POST':
         console.log('➕ POST client - creating:', body);
-        const client = new Client(body);
-        await client.save();
-        console.log('✅ POST client success - created:', client._id);
-        return res.status(201).json(client);
+        console.log('📄 Body complet:', JSON.stringify(body, null, 2));
+        
+        try {
+          const client = new Client(body);
+          await client.save();
+          console.log('✅ POST client success - created:', client._id);
+          return res.status(201).json(client);
+        } catch (saveError) {
+          console.error('💥 Erreur lors de la sauvegarde du client:', saveError);
+          console.error('Validation errors:', saveError.errors);
+          return res.status(400).json({ 
+            error: 'Erreur de validation du client',
+            details: saveError.message,
+            validationErrors: saveError.errors
+          });
+        }
         
       case 'PUT':
         if (!id) {
@@ -192,8 +211,11 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: `Méthode ${method} non autorisée` });
     }
   } catch (error) {
-    console.error('💥 ERREUR API:', error);
+    console.error('💥 ERREUR API COMPLÈTE:');
+    console.error('Message:', error.message);
+    console.error('Code:', error.code);
     console.error('Stack:', error.stack);
+    console.error('Type:', error.name);
     
     // Si erreur de connexion MongoDB, retenter en mode démo
     if (error.message && error.message.includes('MONGO_URI')) {
@@ -229,7 +251,9 @@ module.exports = async (req, res) => {
     
     return res.status(500).json({ 
       error: error.message,
-      stack: error.stack 
+      stack: error.stack,
+      code: error.code,
+      name: error.name
     });
   }
 };
