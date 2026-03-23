@@ -1498,16 +1498,16 @@ function PasteImportModal({ clients, onImport, onClose }) {
     if (!preview?.length) return;
     setImporting(true);
     setError("");
-    
+
     try {
       const base = clients.length;
       const newC = preview.map((r, i) => ({
         ...r,
         dossier: `DOS-EV-${String(base + i + 1).padStart(4, "0")}`,
       }));
-      
+
       console.log("Importing clients:", newC);
-      
+
       // Importer chaque client via l'API
       let successCount = 0;
       for (let i = 0; i < newC.length; i++) {
@@ -1518,17 +1518,21 @@ function PasteImportModal({ clients, onImport, onClose }) {
           successCount++;
         } catch (clientErr) {
           console.error(`Error importing client ${i + 1}:`, clientErr);
-          throw new Error(`Erreur lors de l'importation du client ${i + 1}: ${clientErr.message}`);
+          throw new Error(
+            `Erreur lors de l'importation du client ${i + 1}: ${clientErr.message}`,
+          );
         }
       }
-      
+
       toast(
         `${successCount} client${successCount > 1 ? "s" : ""} importé${successCount > 1 ? "s" : ""} avec succès`,
       );
       onClose();
     } catch (err) {
       console.error("Import error:", err);
-      setError(err.message || "Erreur lors de l'importation. Veuillez réessayer.");
+      setError(
+        err.message || "Erreur lors de l'importation. Veuillez réessayer.",
+      );
     } finally {
       setImporting(false);
     }
@@ -1810,7 +1814,9 @@ function PasteImportModal({ clients, onImport, onClose }) {
               Annuler
             </Btn>
             <Btn ico="upload" onClick={handleImport} disabled={importing}>
-              {importing ? 'Importation...' : `Importer ${preview.length} client${preview.length > 1 ? "s" : ""}`}
+              {importing
+                ? "Importation..."
+                : `Importer ${preview.length} client${preview.length > 1 ? "s" : ""}`}
             </Btn>
           </div>
         </>
@@ -1922,7 +1928,13 @@ function BulkEditModal({ ids, clients, onSave, onClose }) {
 }
 
 // ─── Clients section ──────────────────────────────────────────────────────────
-function ClientsSection({ clients, setClients, addClient, onView, clientActions }) {
+function ClientsSection({
+  clients,
+  setClients,
+  addClient,
+  onView,
+  clientActions,
+}) {
   const [q, setQ] = useState("");
   const [modal, setModal] = useState(null);
   const [del, setDel] = useState(null);
@@ -1960,7 +1972,9 @@ function ClientsSection({ clients, setClients, addClient, onView, clientActions 
   }, [clients, debouncedQ, sortBy]);
 
   const allSel = useMemo(
-    () => filtered.length > 0 && filtered.every((c) => selected.has(getClientId(c))),
+    () =>
+      filtered.length > 0 &&
+      filtered.every((c) => selected.has(getClientId(c))),
     [filtered, selected],
   );
   const someSel = useMemo(
@@ -1968,7 +1982,8 @@ function ClientsSection({ clients, setClients, addClient, onView, clientActions 
     [filtered, selected, allSel],
   );
   const selIds = useMemo(
-    () => [...selected].filter((id) => clients.find((c) => getClientId(c) === id)),
+    () =>
+      [...selected].filter((id) => clients.find((c) => getClientId(c) === id)),
     [selected, clients],
   );
 
@@ -1985,7 +2000,9 @@ function ClientsSection({ clients, setClients, addClient, onView, clientActions 
     (v) =>
       setSelected((s) => {
         const n = new Set(s);
-        filtered.forEach((c) => (v ? n.add(getClientId(c)) : n.delete(getClientId(c))));
+        filtered.forEach((c) =>
+          v ? n.add(getClientId(c)) : n.delete(getClientId(c)),
+        );
         return n;
       }),
     [filtered],
@@ -2456,9 +2473,12 @@ function ClientsSection({ clients, setClients, addClient, onView, clientActions 
           onConfirm={async () => {
             try {
               await Promise.all(
-                selIds.map((c) => clientActions.deleteClient(getClientId(c)))
+                selIds.map((c) => clientActions.deleteClient(getClientId(c))),
               );
-              toast(`${selIds.length} dossier${selIds.length > 1 ? "s" : ""} supprimé${selIds.length > 1 ? "s" : ""}`, "error");
+              toast(
+                `${selIds.length} dossier${selIds.length > 1 ? "s" : ""} supprimé${selIds.length > 1 ? "s" : ""}`,
+                "error",
+              );
               clearSel();
             } catch {
               toast("Erreur lors de la suppression multiple", "error");
@@ -3674,24 +3694,10 @@ function DarkModeToggle() {
 
 function EversunApp() {
   // Hook useApiData pour les clients - DÉCLARÉ EN PREMIER
-  const [clients, setClients, clientsLoading, clientsError, clientActions] = useApiData('evs_clients', []);
+  const [clients, setClients, clientsLoading, clientsError, clientActions] =
+    useApiData("evs_clients", []);
 
-  // Charger les clients depuis l'API au montage
-  useEffect(() => {
-    setIsLoading(true);
-    fetch("/api/clients")
-      .then((res) => {
-        if (!res.ok) throw new Error("Erreur lors du chargement des clients");
-        return res.json();
-      })
-      .then((data) => {
-        setClients(data);
-      })
-      .catch(() => {
-        toast("Impossible de charger les clients", "error");
-      })
-      .finally(() => setIsLoading(false));
-  }, []);
+  // Suppression du double chargement : le hook useApiData gère déjà le fetch
 
   // Ajouter un client via l'API
   const addClient = async (client) => {
@@ -3707,7 +3713,8 @@ function EversunApp() {
   };
   const [page, setPage] = useState("clients");
   const [mini, setMini] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Utiliser clientsLoading pour le Loader global
+  const isLoading = clientsLoading;
   const [viewC, setViewC] = useState(null);
   const [dpData, setDpData] = useState({});
   const [consuelData, setConsuelData] = useState({});
